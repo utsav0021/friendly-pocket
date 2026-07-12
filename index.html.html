@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <title>Friendly Pocket</title>
+  <meta name="theme-color" content="#030305">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pocket">
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💸</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2314141E%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>💸</text></svg>">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
+    body { background-color: #030305; color: #FFFFFF; min-height: 100vh; display: flex; justify-content: center; padding: 20px; padding-top: 40px; overflow-x: hidden; position: relative; }
+    
+    /* Cinematic Background */
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.5; animation: drift 30s infinite ease-in-out alternate; }
+    .orb-1 { top: -20%; left: -20%; width: 60vw; height: 60vw; background: #FF2A5F; }
+    .orb-2 { bottom: -20%; right: -10%; width: 70vw; height: 70vw; background: #00F0FF; animation-delay: -5s; animation-direction: alternate-reverse; }
+    .orb-3 { top: 40%; left: 40%; width: 50vw; height: 50vw; background: #7000FF; animation-delay: -10s; }
+    @keyframes drift { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(15vw, 10vh) scale(1.3); } 100% { transform: translate(-10vw, 15vh) scale(0.9); } }
+
+    .app-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 25px; z-index: 1; padding-bottom: 40px; }
+    .header { display: flex; flex-direction: column; gap: 5px; }
+    .brand-name { font-size: 26px; font-weight: 900; color: #FFF; letter-spacing: 0.5px; }
+    .greeting { font-size: 15px; color: rgba(255,255,255,0.6); }
+
+    /* Visual Breakdown Chart Feature */
+    .chart-container { background: rgba(20, 20, 30, 0.5); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 20px; }
+    .chart-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;}
+    .bar-wrap { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.5); margin-bottom: 15px; }
+    .bar-segment { height: 100%; transition: width 0.5s ease; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.8); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* Interactive Input Panel */
+    .glass-panel { background: rgba(20, 20, 30, 0.4); backdrop-filter: blur(40px) saturate(200%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 32px; padding: 24px; }
+    .input-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+    input { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 16px 20px; color: #FFF; font-size: 16px; transition: all 0.3s ease; }
+    input:focus { border: 1px solid #00F0FF; background: rgba(0, 0, 0, 0.8); outline: none; }
+    #location-input { text-transform: capitalize; }
+    
+    .category-selector { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scroll-snap-type: x mandatory;}
+    .category-selector::-webkit-scrollbar { display: none; }
+    .cat-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); padding: 12px 18px; border-radius: 20px; font-size: 15px; white-space: nowrap; cursor: pointer; transition: all 0.2s; scroll-snap-align: start;}
+    .cat-btn.active { background: #FFF; color: #000; font-weight: 700; border-color: #FFF; }
+    button.add-btn { width: 100%; background: linear-gradient(135deg, #00F0FF, #0080FF); color: #000; border: none; padding: 18px; border-radius: 16px; font-size: 17px; font-weight: 800; cursor: pointer; transition: all 0.2s ease; }
+    button.add-btn:active { transform: translateY(2px); }
+
+    /* Transactions List */
+    .list-header { font-size: 16px; font-weight: 700; color: #FFF; margin-bottom: 15px; }
+    .transactions-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .card-left { display: flex; align-items: center; gap: 15px; }
+    .cat-icon { font-size: 22px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 14px; }
+    .card-info { display: flex; flex-direction: column; gap: 4px; }
+    .card-location { font-size: 16px; font-weight: 700; color: #FFF; }
+    .card-date { font-size: 12px; color: rgba(255, 255, 255, 0.4); }
+    .card-right { display: flex; align-items: center; gap: 12px; }
+    .card-amount { font-size: 18px; font-weight: 800; color: #FFF; }
+    .delete-btn { background: transparent; color: rgba(255, 255, 255, 0.2); border: none; font-size: 20px; cursor: pointer; padding: 5px;}
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="app-container">
+    
+    <header class="header">
+      <div class="greeting" id="greeting-text">Good Morning,</div>
+      <div class="brand-name">Friendly Pocket</div>
+    </header>
+
+    <div class="chart-container">
+      <div class="chart-title">This Month's Breakdown</div>
+      <div class="bar-wrap" id="chart-bar"></div>
+      <div class="legend" id="chart-legend"></div>
+    </div>
+
+    <div class="glass-panel">
+      <div class="input-group">
+        <input type="number" id="expense-input" placeholder="Amount (e.g. ₹ 500)">
+        <input type="text" id="location-input" placeholder="Description (e.g. Uber, Blinkit)">
+      </div>
+      
+      <div class="category-selector" id="category-selector">
+        <div class="cat-btn active" onclick="selectCategory(this, '🍽️ Dining')">🍽️ Dining</div>
+        <div class="cat-btn" onclick="selectCategory(this, '🚕 Travel')">🚕 Travel</div>
+        <div class="cat-btn" onclick="selectCategory(this, '🛒 Groceries')">🛒 Groceries</div>
+        <div class="cat-btn" onclick="selectCategory(this, '🛍️ Shopping')">🛍️ Shopping</div>
+        <div class="cat-btn" onclick="selectCategory(this, '⚡ Bills')">⚡ Bills</div>
+        <div class="cat-btn" onclick="selectCategory(this, '📦 Other')">📦 Other</div>
+      </div>
+
+      <button class="add-btn" onclick="addExpense()">Add Transaction</button>
+    </div>
+
+    <div>
+      <div class="list-header">Recent Activity</div>
+      <ul class="transactions-list" id="transactions-list"></ul>
+    </div>
+
+  </div>
+
+  <script>
+    const STORAGE_KEY = '@friendly_pocket_final';
+    let transactions = [];
+    let selectedCategory = '🍽️ Dining';
+
+    const colors = {
+      '🍽️ Dining': '#FF2A5F', '🚕 Travel': '#00F0FF', '🛒 Groceries': '#7000FF',
+      '🛍️ Shopping': '#F4D03F', '⚡ Bills': '#E67E22', '📦 Other': '#95A5A6'
+    };
+
+    const formatINR = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+
+    function init() {
+      const hour = new Date().getHours();
+      document.getElementById('greeting-text').innerText = hour < 12 ? "Good Morning," : hour < 17 ? "Good Afternoon," : "Good Evening,";
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) transactions = JSON.parse(savedData);
+      renderUI();
+    }
+
+    function selectCategory(element, category) {
+      document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      selectedCategory = category;
+    }
+
+    function renderChart() {
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+      let totals = {}, grandTotal = 0;
+
+      transactions.forEach(t => {
+        if (t.timestamp >= startOfMonth) {
+          totals[t.category] = (totals[t.category] || 0) + t.amount;
+          grandTotal += t.amount;
+        }
+      });
+
+      const bar = document.getElementById('chart-bar');
+      const legend = document.getElementById('chart-legend');
+      bar.innerHTML = ''; legend.innerHTML = '';
+
+      if (grandTotal === 0) {
+        legend.innerHTML = '<div style="color:rgba(255,255,255,0.4)">No data this month.</div>';
+        return;
+      }
+
+      for (const [cat, amt] of Object.entries(totals)) {
+        const percent = (amt / grandTotal) * 100;
+        const color = colors[cat] || colors['📦 Other'];
+        
+        bar.innerHTML += `<div class="bar-segment" style="width: ${percent}%; background: ${color};"></div>`;
+        legend.innerHTML += `
+          <div class="legend-item">
+            <div class="dot" style="background: ${color};"></div>
+            <span>${cat.split(' ')[1]} (${Math.round(percent)}%)</span>
+          </div>`;
+      }
+    }
+
+    function renderUI() {
+      renderChart();
+      const listElement = document.getElementById('transactions-list');
+      listElement.innerHTML = '';
+
+      transactions.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'card';
+        li.innerHTML = `
+          <div class="card-left">
+            <div class="cat-icon">${item.category.split(' ')[0]}</div>
+            <div class="card-info">
+              <span class="card-location">${item.location}</span>
+              <span class="card-date">${item.displayDate}</span>
+            </div>
+          </div>
+          <div class="card-right">
+            <span class="card-amount">-${formatINR(item.amount)}</span>
+            <button class="delete-btn" onclick="deleteExpense('${item.id}')">×</button>
+          </div>
+        `;
+        listElement.appendChild(li);
+      });
+    }
+
+    function addExpense() {
+      const expenseInput = document.getElementById('expense-input');
+      const locationInput = document.getElementById('location-input');
+      const amount = parseFloat(expenseInput.value);
+      const location = locationInput.value.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+      if (!amount || !location || amount <= 0) return alert("Please enter valid details");
+
+      const timestamp = Date.now();
+      transactions.unshift({
+        id: timestamp.toString(), amount, location, category: selectedCategory, timestamp,
+        displayDate: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+      });
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      renderUI();
+      expenseInput.value = ''; locationInput.value = '';
+    }
+
+    function deleteExpense(id) {
+      transactions = transactions.filter(item => item.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      renderUI();
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
